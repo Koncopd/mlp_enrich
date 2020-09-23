@@ -23,23 +23,23 @@ std_layer = lambda mask: nn.Sequential(MaskedLinear(mask),
 
 
 class EnrichClassifier(nn.Module):
-    def __init__(self, pathways_mask, n_labels):
+    def __init__(self, pathways_mask, n_labels, divide_nodes=(5, 2, 2), min_nodes=(4, 3, 2)):
         super().__init__()
 
-        layer_1_sizes = pathways_mask.sum(0) // 5
-        layer_1_sizes[layer_1_sizes<4] = 4
+        layer_1_sizes = pathways_mask.sum(0) // divide_nodes[0]
+        layer_1_sizes[layer_1_sizes < min_nodes[0]] = min_nodes[0]
         layer_1_sizes = layer_1_sizes.type(torch.LongTensor)
 
         layer_1_mask = pathways_mask.repeat_interleave(layer_1_sizes, dim=1)
 
-        layer_2_sizes = layer_1_sizes // 2
-        layer_2_sizes[layer_2_sizes<3] = 3
+        layer_2_sizes = layer_1_sizes // divide_nodes[1]
+        layer_2_sizes[layer_2_sizes < min_nodes[1]] = min_nodes[1]
 
         layer_2_mask = torch.block_diag(*(torch.ones((size, 1)) for size in layer_1_sizes))
         layer_2_mask = layer_2_mask.repeat_interleave(layer_2_sizes, dim=1)
 
-        layer_3_sizes = layer_2_sizes // 2
-        layer_3_sizes[layer_3_sizes<2] = 2
+        layer_3_sizes = layer_2_sizes // divide_nodes[2]
+        layer_3_sizes[layer_3_sizes < min_nodes[2]] = min_nodes[2]
 
         layer_3_mask = torch.block_diag(*(torch.ones((size, 1)) for size in layer_2_sizes))
         layer_3_mask = layer_3_mask.repeat_interleave(layer_3_sizes, dim=1)
