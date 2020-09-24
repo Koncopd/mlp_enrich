@@ -10,7 +10,7 @@ class MaskedLinear(nn.Linear):
 
         super().__init__(in_features, out_features, bias)
 
-        self.mask = mask.t()
+        self.register_buffer('mask', mask.t())
 
     def forward(self, input):
         return nn.functional.linear(input, self.weight*self.mask, self.bias)
