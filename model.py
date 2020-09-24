@@ -68,3 +68,6 @@ class EnrichClassifier(nn.Module):
 
     def get_relevance(self):
         return self.classify.weight.data
+
+    def predict(self, x):
+        return torch.argmax(self.forward(x), dim=1)

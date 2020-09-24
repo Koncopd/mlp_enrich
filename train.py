@@ -8,7 +8,7 @@ def index_iter(n_obs, batch_size):
         yield indices[i: min(i + batch_size, n_obs)]
 
 def train_classifier(adata, obs_key, classifier, lr, batch_size, num_epochs,
-                      test_adata=None, optim=torch.optim.Adam, **kwargs):
+                      test_adata=None, optim=torch.optim.Adam, accuracy=True, **kwargs):
 
     optimizer = optim(classifier.parameters(), lr=lr, **kwargs)
     criterion = torch.nn.CrossEntropyLoss()
@@ -19,11 +19,11 @@ def train_classifier(adata, obs_key, classifier, lr, batch_size, num_epochs,
     if test_adata is None:
         t_X = torch.Tensor(adata.X)
         t_labels = torch.LongTensor(le.transform(adata.obs[obs_key]))
-        comment = '-- total train loss: '
+        comment = '-- total train accuracy: ' if accuracy else  '-- total train loss:'
     else:
         t_X = torch.Tensor(test_adata.X)
         t_labels = torch.LongTensor(le.transform(test_adata.obs[obs_key]))
-        comment = '-- test loss:'
+        comment = '-- test accuracy:' if accuracy else  '-- test loss:'
 
     for epoch in range(num_epochs):
         print('Epoch:', epoch)
@@ -48,6 +48,10 @@ def train_classifier(adata, obs_key, classifier, lr, batch_size, num_epochs,
 
         classifier.eval()
 
-        out = classifier(t_X)
-        loss = criterion(out, t_labels)
+        if accuracy:
+            out = classifier.predict(t_X)
+            loss = out.eq(t_labels).sum() / t_X.shape[0] * 100
+        else:
+            out = classifier(t_X)
+            loss = criterion(out, t_labels)
         print('Epoch:', epoch, comment, '%.4f' % loss.data.numpy())
