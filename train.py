@@ -50,7 +50,7 @@ def train_classifier(adata, obs_key, classifier, lr, batch_size, num_epochs,
 
         if accuracy:
             out = classifier.predict(t_X)
-            loss = out.eq(t_labels).sum() / t_X.shape[0] * 100
+            loss = out.eq(t_labels).sum() / float(t_X.shape[0]) * 100
         else:
             out = classifier(t_X)
             loss = criterion(out, t_labels)
